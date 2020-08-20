@@ -6,8 +6,10 @@ all: ex1 libex2.so
 run:
 	./ex1
 
+.PHONE: clean
+
 clean:
-	rm -f libex2.so ex1
+	rm -f *.o libex2.so ex1
 
 install: ex1 libex2.so
 	install -d $(prefix)/usr/bin
@@ -23,9 +25,11 @@ uninstall:
 	rm -f $(prefix)/usr/lib/libex2.so
 	rm -f $(prefix)/usr/include/ex2.h
 
-ex1: 
-	gcc -Wall -o ex1 ex1.c
+ex1: ex1.o | libex2.so
+	gcc -L. -Wall -Wl,-rpath='$$ORIGIN/../lib' -Wl,-rpath='$$ORIGIN' -o ex1 $< -lex2
 
-libex2.so: 
-	gcc -c -Wall ex2.c
+libex2.so:  ex2.o
 	gcc -shared -o libex2.so ex2.o
+
+%.o : %.c
+	gcc -Wall -c $< -o $@
