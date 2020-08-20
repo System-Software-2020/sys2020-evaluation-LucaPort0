@@ -1,26 +1,35 @@
-all: ex1 installEx1 ex2 installEx2
+
+prefix=/tmp
+
+all: ex1 libex2.so
 
 run:
 	./ex1
 
+.PHONE: clean
+
 clean:
-	rm -f libex2.so ex1
+	rm -f *.o libex2.so ex1
 
-install: installEx1 installEx2
-
-installEx1: 
+install: ex1 libex2.so
+	install -d $(prefix)/usr/bin
+	install -d $(prefix)/usr/lib
+	install -d $(prefix)/usr/include 
 	cp ex1 $(prefix)/usr/bin/
-
-installEx2: 
 	cp libex2.so $(prefix)/usr/lib/
+	cp ex2.h $(prefix)/usr/include
+
 
 uninstall:
-	rm $(prefix)/usr/bin/ex1
-	rm $(prefix)/usr/lib/libex2.so
+	rm -f $(prefix)/usr/bin/ex1
+	rm -f $(prefix)/usr/lib/libex2.so
+	rm -f $(prefix)/usr/include/ex2.h
 
-ex1: 
-	gcc -Wall -o ex1 ex1.c
+ex1: ex1.o | libex2.so
+	gcc -L. -Wall -Wl,-rpath='$$ORIGIN/../lib' -Wl,-rpath='$$ORIGIN' -o ex1 $< -lex2
 
-ex2: 
-	gcc -c -Wall ex2.c
+libex2.so:  ex2.o
 	gcc -shared -o libex2.so ex2.o
+
+%.o : %.c
+	gcc -Wall -c $< -o $@
